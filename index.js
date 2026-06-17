@@ -4,9 +4,7 @@ const crypto = require('crypto');
 // ========================================================
 // [إعدادات الأمان الحقيقية المستخرجة]
 // ========================================================
-const PRIVATE_KEY = "7b704485d8634d6986105a05f22a704b1100df553215457d9bb12fd4f34b6958"; 
-const WALLET_ADDRESS = "0x88801Fdb39B84211855bBD57Db5c4e88BF8FF393"; 
-
+const PRIVATE_KEY = 
 // معرفات الأسواق الرسمية النشطة
 const MARKETS = {
     "BTC_PRICE": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174", 

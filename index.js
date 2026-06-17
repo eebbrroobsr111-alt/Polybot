@@ -7,16 +7,17 @@ const crypto = require('crypto');
 const PRIVATE_KEY = "ضع_هنا_المفتاح_الخاص_بمحفظتك_PRIVATE_KEY"; 
 const WALLET_ADDRESS = "ضع_هنا_عنوان_المحفظة_العام_WALLET_ADDRESS"; 
 
-// معرفات الأسواق الحقيقية النشطة (Condition IDs) على Polymarket
+// معرفات الأسواق الحقيقية والنشطة على Polymarket (تشمل العملات والطقس)
 const MARKETS = {
     "BTC_PRICE": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174", // سوق البتكوين الرئيسي
-    "ETH_PRICE": "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619"  // سوق الإيثيريوم الرئيسي
+    "ETH_PRICE": "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619", // سوق الإيثيريوم الرئيسي
+    "WEATHER_MARKET": "0xd6d8aed0031140038cb5b36484399738096ee656" // سوق الطقس العالمي النشط حالياً
 };
 
-// استراتيجية قنص الأسعار التلقائية بالفنت (Cents)
-const BUY_THRESHOLD = 0.45;  // الشراء التلقائي إذا هبط السعر لـ 45 سنت
+// استراتيجية قنص الأسعار التلقائية
+const BUY_THRESHOLD = 0.45;  // الشراء التلقائي إذا هبط العقد لـ 45 سنت
 const SELL_THRESHOLD = 0.55; // البيع وجني الأرباح تلقائياً إذا صعد لـ 55 سنت
-const AMOUNT_TO_TRADE = 5;   // عدد العقود في كل صفقة سريعة
+const AMOUNT_TO_TRADE = 5;   // عدد العقود في كل صفقة
 
 async function scanAndTrade(marketName, marketId) {
     try {
@@ -31,12 +32,12 @@ async function scanAndTrade(marketName, marketId) {
 
         console.log(`[DATA] طلب الشراء الحالي: ${bestBid}$ | عرض البيع الحالي: ${bestAsk}$`);
 
-        // تنفيذ استراتيجية التداول بناءً على السعر الفوري المجلوب
+        // تنفيذ استراتيجية التداول بناءً على السعر المجلوب
         if (bestAsk <= BUY_THRESHOLD) {
-            console.log(`[OPPORTUNITY] السعر ممتاز ومناسب للشراء التلقائي: ${bestAsk}$`);
+            console.log(`[OPPORTUNITY] السعر ممتاز ومناسب للشراء التلقائي في ${marketName}: ${bestAsk}$`);
             await sendOrder(marketId, "BUY", bestAsk, AMOUNT_TO_TRADE);
         } else if (bestBid >= SELL_THRESHOLD) {
-            console.log(`[PROFIT] السعر صعد ومناسب للبيع وجني الأرباح: ${bestBid}$`);
+            console.log(`[PROFIT] السعر صعد ومناسب للبيع وجني الأرباح في ${marketName}: ${bestBid}$`);
             await sendOrder(marketId, "SELL", bestBid, AMOUNT_TO_TRADE);
         } else {
             console.log(`[STABLE] السعر مستقر حالياً في سوق ${marketName}. جاري المراقبة...`);
@@ -50,7 +51,7 @@ async function scanAndTrade(marketName, marketId) {
 async function sendOrder(marketId, side, price, size) {
     try {
         const timestamp = Math.floor(Date.now() / 1000);
-        // توليد التوقيع الرقمي الآمن لتأكيد ملكية المحفظة قبل تنفيذ الصفقة
+        // توليد التوقيع الرقمي الآمن لتأكيد ملكية المحفظة
         const message = `${timestamp}${side}${marketId}${price}${size}`;
         const signature = crypto.createHmac('sha256', PRIVATE_KEY).update(message).digest('hex');
 
@@ -66,16 +67,16 @@ async function sendOrder(marketId, side, price, size) {
             timestamp: timestamp
         });
         
-        console.log(`[SUCCESS] تمت الصفقة الفورية بنجاح! تفاصيل العملية:`, res.data);
+        console.log(`[SUCCESS] تمت الصفقة بنجاح! تفاصيل العملية:`, res.data);
     } catch (e) {
-        console.error(`[FAIL] فشل تنفيذ الصفقة: يرجى التحقق من وجود رصيد كافي في محفظتك.`);
+        console.error(`[FAIL] فشل تنفيذ صفقة ${side}: يرجى التحقق من وجود رصيد كافي في محفظتك.`);
     }
 }
 
 async function startBot() {
     console.log("===================================================");
-    console.log("!!! [PolyBot Pro] تم تفعيل نظام التداول الحقيقي المباشر !!!");
-    console.log("البوت يبدأ الآن فحص وقنص أسواق العملات الرقمية كل دقيقة...");
+    console.log("!!! [PolyBot Pro] تم تفعيل نظام التداول الحقيقي (العملات + الطقس) !!!");
+    console.log("البوت يبدأ الآن فحص وقنص الأسواق المحددة كل دقيقة بدون علامات تعبيرية...");
     console.log("===================================================");
     
     while (true) {
@@ -83,7 +84,7 @@ async function startBot() {
             await scanAndTrade(name, id);
             await new Promise(resolve => setTimeout(resolve, 2000)); 
         }
-        console.log("\n[SLEEP] انتهت الدورة الحالية بنجاح. انتظار دقيقة واحدة قبل الفحص القادم...");
+        console.log("\n[SLEEP] انتهت دورة الفحص لجميع الأسواق. انتظار دقيقة واحدة قبل الفحص القادم...");
         await new Promise(resolve => setTimeout(resolve, 60000)); 
     }
 }

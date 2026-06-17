@@ -2,13 +2,16 @@ const axios = require('axios');
 const crypto = require('crypto');
 
 // ========================================================
-// 🔐 [إعدادات الأمان] ضع بيانات محفظتك الحقيقية هنا
+// [إعدادات الأمان الحقيقية المستخرجة]
 // ========================================================
-const PRIVATE_KEY = " 
+const PRIVATE_KEY = "7b704485d8634d6986105a05f22a704b1100df553215457d9bb12fd4f34b6958"; 
+const WALLET_ADDRESS = "0x88801Fdb39B84211855bBD57Db5c4e88BF8FF393"; 
 
 // معرفات الأسواق الرسمية النشطة
 const MARKETS = {
-    "BTC_PRICE": "6" 
+    "BTC_PRICE": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174", 
+    "ETH_PRICE": "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619", 
+    "WEATHER_MARKET": "0xd6d8aed0031140038cb5b36484399738096ee656" 
 };
 
 const BUY_THRESHOLD = 0.45;  
@@ -49,11 +52,12 @@ async function scanAndTrade(marketName, marketId) {
 }
 
 async function sendOrder(marketId, side, price, size) {
-    if (PRIVATE_KEY.includes("ضع_هنا")) return;
     try {
         const timestamp = Math.floor(Date.now() / 1000);
         const message = `${timestamp}${side}${marketId}${price}${size}`;
         const signature = crypto.createHmac('sha256', PRIVATE_KEY).update(message).digest('hex');
+
+        console.log(`[EXECUTION] Sending secure signed order to Polymarket...`);
 
         const res = await axios.post('https://clob.polymarket.com/order', {
             market_id: marketId, side: side, price: price.toString(), size: size.toString(),
@@ -61,12 +65,11 @@ async function sendOrder(marketId, side, price, size) {
         });
         console.log(`[SUCCESS] Execution block confirmed!`, res.data);
     } catch (e) {
-        console.error(`[FAILURE] Order execution dropped.`);
+        console.error(`[FAILURE] Order execution dropped. Check wallet balance.`);
     }
 }
 
 async function startBot() {
-    // طباعة مجسم صورة البوت الاحترافي بالشارات الجوهرية للعمل
     console.clear();
     console.log("=========================================================================");
     console.log("      _____       _       ____        _      _____                 ");

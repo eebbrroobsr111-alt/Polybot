@@ -1,86 +1,61 @@
-import os
-import time
-from dotenv import load_dotenv
-from py_clob_client.client import ClobClient
-from py_clob_client.clob_types import OrderArgs
-from py_clob_client.constants import POLYGON
+// استيراد المكتبات اللازمة للاتصال بـ Polymarket وشبكة Polygon
+const { ClobClient } = require("@polymarket/clob-sdk");
+const { Wallet } = require("ethers");
+require("dotenv").config();
 
-# 1. إعداد الاتصال والبيانات السرية
-load_dotenv()
-PRIVATE_KEY = os.getenv("POLYMARKET_PRIVATE_KEY")
-ADDRESS = os.getenv("WALLET_ADDRESS")
+// ==========================================
+// ⚙️ إعدادات المحفظة والبيانات السرية (تعديل لمرة واحدة)
+// ==========================================
+// ضع المفتاح الخاص بمحفظتك هنا (تأكد أنها محفظة تجريبية بها رصيد بسيط لحمايتك)
+const PRIVATE_KEY = "ضع_هنا_المفتاح_الخاص_بمحفظتك_PRIVATE_KEY"; 
+// ضع عنوان المحفظة العام هنا
+const WALLET_ADDRESS = "ضع_هنا_عنوان_المحفظة_العام_WALLET_ADDRESS"; 
 
-# تعريف معرفات الأسواق (Condition IDs) للعملات والطقس على Polymarket
-MARKETS = {
-    "BTC_5MIN": "0x_market_id_for_btc_up_down",
-    "ETH_5MIN": "0x_market_id_for_eth_up_down",
-    "XRP_5MIN": "0x_market_id_for_xrp_up_down",
-    "BNB_5MIN": "0x_market_id_for_bnb_up_down",
-    "WEATHER_NYC": "0x_market_id_for_weather_markets"
-}
+// إعداد الاتصال بالمحفظة وشبكة البوت
+const wallet = new Wallet(PRIVATE_KEY);
+const client = new ClobClient({
+    host: "https://clob.polymarket.com",
+    secret: PRIVATE_KEY,
+    address: WALLET_ADDRESS,
+    chainId: 137 // شبكة Polygon المعتمدة لدى Polymarket
+});
 
-def initialize_client():
-    # ربط البوت بشبكة Polygon وحسابك الخاص
-    client = ClobClient(
-        host="https://clob.polymarket.com",
-        private_key=PRIVATE_KEY,
-        address=ADDRESS,
-        chain_id=POLYGON
-    )
-    return client
+// ==========================================
+// 📊 معرفات الأسواق الحقيقية (Condition IDs) على Polymarket
+// ==========================================
+const MARKETS = {
+    "BTC_PRICE": "0x_معرف_سوق_البتكوين_الحالي",
+    "ETH_PRICE": "0x_معرف_سوق_الإيثيريوم_الحالي",
+    "XRP_PRICE": "0x_معرف_سوق_الـ_XRP_الحالي",
+    "BNB_PRICE": "0x_معرف_سوق_الـ_BNB_الحالي",
+    "WEATHER_MARKET": "0x_معرف_سوق_الطقس_الحالي"
+};
 
-# 2. خوارزمية فحص الفرص وقنص الأسعار (التحديث كل ثانية/دقيقة)
-def scan_and_trade(client, market_name, market_id):
-    try:
-        # جلب كتاب الأوامر الحالي (Order Book) لمعرفة سعر العرض والطلب (Yes/No)
-        order_book = client.get_order_book(market_id)
-        best_bid_yes = float(order_book.bids[0].price) if order_book.bids else 0
-        best_ask_yes = float(order_book.asks[0].price) if order_book.asks else 1
+// إعدادات استراتيجية التداول السريع (Scalping)
+const BUY_THRESHOLD = 0.45;  // الشراء التلقائي إذا انخفض السعر عن 45 سنت
+const SELL_THRESHOLD = 0.55; // البيع وجني الأرباح التلقائي إذا وصل السعر لـ 55 سنت
+const TRADE_AMOUNT = 10;     // كمية العقود في كل صفقة سريعة
 
-        print(f"[{market_name}] أفضل سعر شراء: {best_bid_yes}$ | أفضل سعر بيع: {best_ask_yes}$")
-
-        # --- استراتيجية القنص السريع (Scalping / Arbitrage) ---
-        # مثال: إذا انخفض سعر عقد (Yes) فجأة تحت القيمة العادلة بسبب بيع عشوائي، نقوم بالشراء فوراً
-        BUY_THRESHOLD = 0.45  # سعر دخول مستهدف كمثال
-        SELL_THRESHOLD = 0.55 # سعر خروج مستهدف بربح سريع
-
-        if best_ask_yes <= BUY_THRESHOLD:
-            print(f"🚀 قنص فرصة شراء في {market_name} بسعر {best_ask_yes}")
-            execute_order(client, market_id, side="BUY", price=best_ask_yes, size=100)
-            
-        elif best_bid_yes >= SELL_THRESHOLD:
-            print(f"💰 فرصة خروج وجني أرباح في {market_name} بسعر {best_bid_yes}")
-            execute_order(client, market_id, side="SELL", price=best_bid_yes, size=100)
-
-    except Exception as e:
-        print(f"خطأ أثناء فحص سوق {market_name}: {e}")
-
-# 3. محرك تنفيذ الصفقات التلقائي السريع
-def execute_order(client, market_id, side, price, size):
-    order_args = OrderArgs(
-        price=price,
-        size=size,
-        side=side,
-        token_id="...", # معرف عقد YES أو NO المحدد
-        market_id=market_id
-    )
-    # إرسال الأمر مباشرة لمحرك مطابقة الأوامر (CLOB)
-    signed_order = client.create_order(order_args)
-    resp = client.post_order(signed_order)
-    print(f"حالة الصفقة: {resp}")
-    return resp
-
-# 4. الحلقة اللانهائية للتشغيل المتواصل دون توقف
-def main_loop():
-    client = initialize_client()
-    print("🤖 البوت يعمل الآن ويراقب الأسواق كل ثانية...")
-    
-    while True:
-        for market_name, market_id in MARKETS.items():
-            scan_and_trade(client, market_name, market_id)
-            time.sleep(1) # الفحص السريع والبحث عن فرص كل ثانية بين الأسواق
+// ==========================================
+// 🔍 خوارزمية الفحص والقنص التلقائي
+// ==========================================
+async function scanAndTrade(marketName, marketId) {
+    try {
+        console.log(`\n🔄 جاري فحص سوق [${marketName}] الآن...`);
         
-        time.sleep(60) # تكرار الدورة الكاملة كل دقيقة للأسواق قصيرة المدى
+        // جلب كتاب الأوامر الحالي للسوق لمعرفة أفضل الأسعار
+        const orderBook = await client.getOrderBook(marketId);
+        
+        const bestBid = orderBook.bids.length > 0 ? parseFloat(orderBook.bids[0].price) : 0;
+        const bestAsk = orderBook.asks.length > 0 ? parseFloat(orderBook.asks[0].price) : 1;
 
-if __name__ == "__main__":
-    main_loop()
+        console.log(`📊 [${marketName}] - أفضل طلب شراء: ${bestBid}$ | أفضل عرض بيع: ${bestAsk}$`);
+
+        // 1. خوارزمية الشراء التلقائي السريع عند اقتناص فرصة هبوط
+        if (bestAsk <= BUY_THRESHOLD) {
+            console.log(`🚀 قنص فرصة شراء سريعة في ${marketName} بسعر ${bestAsk}$`);
+            await executeOrder(marketId, "BUY", bestAsk, TRADE_AMOUNT);
+        } 
+        // 2. خوارزمية البيع وجني الأرباح التلقائي عند الصعود
+        else if (bestBid >= SELL_THRESHOLD) {
+            console.log(`💰 قنص فرصة بيع وجني أرباح سريعة في

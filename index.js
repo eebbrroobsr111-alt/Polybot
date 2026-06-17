@@ -8,9 +8,7 @@ const PRIVATE_KEY = "
 
 // معرفات الأسواق الرسمية النشطة
 const MARKETS = {
-    "BTC_PRICE": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174", 
-    "ETH_PRICE": "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619", 
-    "WEATHER_MARKET": "0xd6d8aed0031140038cb5b36484399738096ee656" 
+    "BTC_PRICE": "6" 
 };
 
 const BUY_THRESHOLD = 0.45;  

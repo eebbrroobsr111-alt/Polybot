@@ -4,8 +4,7 @@ const crypto = require('crypto');
 // ========================================================
 // [بيانات محفظتك الحقيقية المضبطة برمجياً]
 // ========================================================
-const PRIVATE_KEY = "7b704485d8634d6986105a05f22a704b1100df553215457d9bb12fd4f34b6958"; 
-const WALLET_ADDRESS = "0x88801Fdb39B84211855bBD57Db5c4e88BF8FF393"; 
+const PRIVATE_KEY =  
 
 // الرابط المباشر المفتوح لتخطي الحجب الجغرافي
 const BASE_URL = "https://clob.polymarket.com"; 

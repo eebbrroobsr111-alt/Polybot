@@ -1,2 +1,1 @@
-const PROVIDER_URL = 'https://polygon-mainnet.g.alchemy.com/v2/demo';
-
+const PROVIDER_URL = 'https://rpc.ankr.com/polygon';

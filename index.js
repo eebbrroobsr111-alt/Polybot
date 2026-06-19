@@ -1,1 +1,2 @@
-const PROVIDER_URL = 'https://rpc.ankr.com/polygon';
+const PROVIDER_URL = 'https://polygon-pokt.nodies.app';
+

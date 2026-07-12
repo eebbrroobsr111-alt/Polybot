@@ -1,1 +1,1 @@
-attached_assets/exports/gmgn-bot-source.zip
+https://replit.com/@wzs2qb9zdc/Crypto-Guard-Bot2?mobileWebview=1&forceTheme=replitLight&vBonsai=2.189.8&bonsaiPlatform=ios&themeRevision=2026-07-07T16%253A48%253A37.143Z&errorTrace=dcecf09c-f6b7-4907-be25-d89050ee8ada&supportsUpsellBridge=1&webviewBridge=1&storeReviewPrompt=1&stripePayment=1&connectOAuthReturnUrl=replit%253A%252F%252F%252Fconnect-oauth#attached_assets/exports/gmgn-bot-source.zip
